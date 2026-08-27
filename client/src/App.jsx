@@ -116,7 +116,7 @@ export default function App() {
         </button>
       </header>
 
-      <ReceiptUploader onRegister={addReceipt} />
+      <ReceiptUploader onRegister={addReceipt} receipts={receipts} />
 
       <SummaryCards
         periodLabel={periodLabel}

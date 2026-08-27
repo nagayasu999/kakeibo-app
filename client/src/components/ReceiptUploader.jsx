@@ -1,16 +1,18 @@
-import { useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { fileToResizedBase64 } from '../utils/image.js';
 import { CATEGORIES } from '../utils/categories.js';
-import { formatYen } from '../utils/format.js';
+import { formatDate, formatYen } from '../utils/format.js';
+import { validateDraft } from '../utils/validation.js';
 
 /** 受け付ける画像形式 */
 const ACCEPTED = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
 
 /**
  * レシート画像のアップロードと解析結果の確認・修正を行うカード。
- * @param {{ onRegister: (receipt: object) => void }} props
+ * @param {{ onRegister: (receipt: object) => void, receipts: Array }} props
+ *   receipts は重複レシートの判定に使う（登録済みデータとの突き合わせ）。
  */
-export default function ReceiptUploader({ onRegister }) {
+export default function ReceiptUploader({ onRegister, receipts = [] }) {
   const fileInputRef = useRef(null);
   const [imageDataUrl, setImageDataUrl] = useState('');   // プレビュー用
   const [payload, setPayload] = useState(null);           // 送信用のbase64データ
@@ -19,6 +21,9 @@ export default function ReceiptUploader({ onRegister }) {
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [isDragging, setIsDragging] = useState(false);
+
+  // 下書きか登録済みデータが変わるたびに検証し直す
+  const validation = useMemo(() => validateDraft(draft, receipts), [draft, receipts]);
 
   /** ファイル選択・ドロップ共通の処理 */
   async function handleFile(file) {
@@ -92,6 +97,23 @@ export default function ReceiptUploader({ onRegister }) {
     const items = draft.items.filter((item) => item.price > 0);
     if (items.length === 0) {
       setError('登録できる明細がありません。');
+      return;
+    }
+
+    // 警告は登録を止めない。ただし黙って進めると
+    // 「負の明細が消えた」「同じレシートが二重に入った」に気づけないため確認する。
+    const warnings = [];
+    if (validation.negativeItems.length > 0) {
+      warnings.push(
+        `金額が負の明細が ${validation.negativeItems.length} 件あります。登録時は除外されます。`,
+      );
+    }
+    if (validation.duplicates.length > 0) {
+      warnings.push(
+        `${formatDate(draft.date)} · ${formatYen(validation.registerTotal)} のレシートは既に登録されています。`,
+      );
+    }
+    if (warnings.length > 0 && !window.confirm(`${warnings.join('\n')}\n\nこのまま登録しますか？`)) {
       return;
     }
 
@@ -244,8 +266,10 @@ export default function ReceiptUploader({ onRegister }) {
                           <td className="num">
                             <input
                               type="number"
+                              className={item.price < 0 ? 'is-invalid' : undefined}
                               value={item.price}
                               min="0"
+                              aria-invalid={item.price < 0 || undefined}
                               onChange={(event) => updateItem(index, 'price', event.target.value)}
                             />
                           </td>
@@ -271,6 +295,32 @@ export default function ReceiptUploader({ onRegister }) {
                     </tfoot>
                   </table>
                 </div>
+
+                {validation.hasWarning && (
+                  <div className="alert warning" role="status">
+                    <ul>
+                      {validation.negativeItems.length > 0 && (
+                        <li>
+                          金額が負の明細があります（
+                          {validation.negativeItems
+                            .map(
+                              (item) =>
+                                `${item.name || `${item.index + 1}行目`}: ${formatYen(item.price)}`,
+                            )
+                            .join('、')}
+                          ）。金額を修正してください。このまま登録すると除外されます。
+                        </li>
+                      )}
+                      {validation.duplicates.length > 0 && (
+                        <li>
+                          同じ購入日・合計金額のレシートが既に {validation.duplicates.length} 件
+                          登録されています（{formatDate(draft.date)} ·{' '}
+                          {formatYen(validation.registerTotal)}）。二重登録の可能性があります。
+                        </li>
+                      )}
+                    </ul>
+                  </div>
+                )}
 
                 <div className="button-row">
                   <button type="button" className="button" onClick={register}>
