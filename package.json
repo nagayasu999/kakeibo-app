@@ -1,0 +1,17 @@
+{
+  "name": "kakeibo-app",
+  "version": "1.0.0",
+  "private": true,
+  "description": "レシート読み込み家計簿Webアプリ（React + Express + Claude API）",
+  "scripts": {
+    "setup": "npm install && npm --prefix server install && npm --prefix client install",
+    "dev": "concurrently -n server,client -c cyan,magenta \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:server": "npm --prefix server run dev",
+    "dev:client": "npm --prefix client run dev",
+    "build": "npm --prefix client run build",
+    "start": "npm --prefix server start"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

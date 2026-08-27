@@ -1,0 +1,473 @@
+/* ===========================================================
+   デザイントークン
+   グラフの色（--series-*）はJS側から getComputedStyle で読む場合に備え、
+   ここを唯一の定義場所とする。
+   =========================================================== */
+:root {
+  color-scheme: light;
+
+  --page:            #f9f9f7;   /* ページ背景 */
+  --surface:         #fcfcfb;   /* カード／グラフの背景 */
+  --surface-sunken:  #f2f2ee;   /* 表のヘッダーなど一段沈んだ面 */
+
+  --text-primary:    #0b0b0b;
+  --text-secondary:  #52514e;
+  --text-muted:      #898781;   /* 軸ラベルなど */
+  --text-success:    #006300;
+
+  --grid:            #e1e0d9;   /* 目盛り線（ヘアライン） */
+  --axis:            #c3c2b7;   /* 基準線 */
+  --border:          rgba(11, 11, 11, 0.10);
+
+  --accent:          #2a78d6;
+  --accent-ink:      #ffffff;
+  --danger:          #d03b3b;
+
+  --shadow: 0 1px 2px rgba(11, 11, 11, 0.06), 0 8px 24px rgba(11, 11, 11, 0.05);
+
+  --radius: 12px;
+}
+
+/* OSがダーク設定のとき（ユーザーが明示的にライトを選んでいない場合のみ適用） */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+
+    --page:            #0d0d0d;
+    --surface:         #1a1a19;
+    --surface-sunken:  #232322;
+
+    --text-primary:    #ffffff;
+    --text-secondary:  #c3c2b7;
+    --text-muted:      #898781;
+    --text-success:    #0ca30c;
+
+    --grid:            #2c2c2a;
+    --axis:            #383835;
+    --border:          rgba(255, 255, 255, 0.10);
+
+    --accent:          #3987e5;
+    --accent-ink:      #0d0d0d;
+    --danger:          #e66767;
+
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.35);
+  }
+}
+
+/* トグルで明示的にダークを選んだとき（OS設定より優先） */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --page:            #0d0d0d;
+  --surface:         #1a1a19;
+  --surface-sunken:  #232322;
+
+  --text-primary:    #ffffff;
+  --text-secondary:  #c3c2b7;
+  --text-muted:      #898781;
+  --text-success:    #0ca30c;
+
+  --grid:            #2c2c2a;
+  --axis:            #383835;
+  --border:          rgba(255, 255, 255, 0.10);
+
+  --accent:          #3987e5;
+  --accent-ink:      #0d0d0d;
+  --danger:          #e66767;
+
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+/* ===========================================================
+   ベース
+   =========================================================== */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--page);
+  color: var(--text-primary);
+  font-family: system-ui, -apple-system, 'Segoe UI', 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3 {
+  margin: 0;
+  line-height: 1.3;
+  font-weight: 650;
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+}
+
+/* ===========================================================
+   レイアウト
+   =========================================================== */
+.app {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 24px 20px 64px;
+}
+
+.app-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+
+.app-header h1 {
+  font-size: 24px;
+  letter-spacing: 0.01em;
+}
+
+.app-header p {
+  margin: 4px 0 0;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.theme-toggle {
+  background: var(--surface);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 7px 14px;
+  font-size: 13px;
+}
+
+.theme-toggle:hover {
+  color: var(--text-primary);
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.card > h2 {
+  font-size: 15px;
+  letter-spacing: 0.02em;
+  margin-bottom: 4px;
+}
+
+.card-subtitle {
+  margin: 0 0 16px;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 20px;
+}
+
+/* ===========================================================
+   サマリー（統計タイル）
+   =========================================================== */
+.summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.stat-tile {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+}
+
+.stat-tile .label {
+  color: var(--text-secondary);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+}
+
+.stat-tile .value {
+  font-size: 28px;
+  font-weight: 660;
+  letter-spacing: -0.01em;
+  margin-top: 2px;
+}
+
+.stat-tile .sub {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+/* ===========================================================
+   アップロード
+   =========================================================== */
+.dropzone {
+  border: 1.5px dashed var(--axis);
+  border-radius: var(--radius);
+  padding: 28px 20px;
+  text-align: center;
+  color: var(--text-secondary);
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.dropzone.is-dragging {
+  border-color: var(--accent);
+  background: var(--surface-sunken);
+}
+
+.dropzone p {
+  margin: 0 0 12px;
+  font-size: 13px;
+}
+
+.button {
+  background: var(--accent);
+  color: var(--accent-ink);
+  border: none;
+  border-radius: 8px;
+  padding: 9px 18px;
+  font-size: 14px;
+  font-weight: 550;
+}
+
+.button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.button.secondary {
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+}
+
+.button.danger {
+  background: transparent;
+  color: var(--danger);
+  border: 1px solid var(--border);
+}
+
+.button-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-top: 16px;
+}
+
+.preview {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+.preview img {
+  width: 200px;
+  max-height: 280px;
+  object-fit: contain;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface-sunken);
+}
+
+.preview-body {
+  flex: 1 1 320px;
+  min-width: 280px;
+}
+
+.alert {
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  margin-top: 14px;
+  border: 1px solid var(--border);
+  background: var(--surface-sunken);
+}
+
+.alert.error {
+  color: var(--danger);
+}
+
+.alert.success {
+  color: var(--text-success);
+}
+
+.loading {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--axis);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ===========================================================
+   フォーム
+   =========================================================== */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+input[type='text'],
+input[type='number'],
+input[type='date'],
+select {
+  font: inherit;
+  font-size: 14px;
+  color: var(--text-primary);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 6px 9px;
+  width: 100%;
+}
+
+input:focus-visible,
+select:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+/* ===========================================================
+   テーブル
+   =========================================================== */
+.table-wrap {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+th {
+  text-align: left;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  color: var(--text-secondary);
+  background: var(--surface-sunken);
+  padding: 8px 10px;
+  white-space: nowrap;
+}
+
+td {
+  padding: 8px 10px;
+  border-top: 1px solid var(--grid);
+  vertical-align: middle;
+}
+
+th.num, td.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+tbody tr:hover {
+  background: var(--surface-sunken);
+}
+
+tfoot td {
+  border-top: 2px solid var(--axis);
+  font-weight: 650;
+}
+
+/* カテゴリ名の前に置く色チップ（色だけに意味を持たせないためラベルと必ず併記） */
+.swatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  margin-right: 7px;
+  vertical-align: baseline;
+}
+
+.icon-button {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+.icon-button:hover {
+  color: var(--danger);
+  background: var(--surface-sunken);
+}
+
+.chart-box {
+  position: relative;
+  height: 280px;
+}
+
+.empty {
+  color: var(--text-muted);
+  font-size: 13px;
+  text-align: center;
+  padding: 36px 12px;
+}
+
+.toolbar {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.toolbar label {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.toolbar select {
+  width: auto;
+  min-width: 150px;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.hint {
+  font-size: 12px;
+  color: var(--text-muted);
+}
